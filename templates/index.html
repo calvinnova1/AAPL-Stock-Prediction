@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Prediction Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #7e22ce;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --info: #0891b2;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--bg-gradient);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+        
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background-color: var(--light);
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1000px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--gray);
+            color: var(--dark);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--light);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stock-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stock-symbol {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .stock-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stock-change {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .positive {
+            background-color: rgba(22, 163, 74, 0.2);
+            color: var(--success);
+        }
+        
+        .negative {
+            background-color: rgba(220, 38, 38, 0.2);
+            color: var(--danger);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .prediction-result {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--light);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .prediction-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .signal {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        
+        .signal-buy {
+            background-color: rgba(22, 163, 74, 0.2);
+            color: var(--success);
+        }
+        
+        .signal-sell {
+            background-color: rgba(220, 38, 38, 0.2);
+            color: var(--danger);
+        }
+        
+        .signal-hold {
+            background-color: rgba(217, 119, 6, 0.2);
+            color: var(--warning);
+        }
+        
+        .demo-notice {
+            background-color: rgba(8, 145, 178, 0.2);
+            color: var(--info);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            margin-top: 30px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .notification i {
+            font-size: 1.2rem;
+        }
+        
+        .notification.success i {
+            color: var(--success);
+        }
+        
+        .notification.error i {
+            color: var(--danger);
+        }
+        
+        .error-message {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>Stock Prediction Dashboard</h1>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="status-text">Connected to Backend</span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-column">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Real-Time Prices</h2>
+                        <div class="card-actions">
+                            <button class="btn btn-outline" id="refresh-prices">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stock-grid" id="prices-container">
+                        </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Price Prediction</h2>
+                    </div>
+                    <div class="input-group">
+                        <label for="symbol-input">Stock Symbol</label>
+                        <input type="text" id="symbol-input" placeholder="e.g., AAPL" value="AAPL">
+                    </div>
+                    <button class="btn btn-primary" id="predict-btn" style="width: 100%;">
+                        <i class="fas fa-brain"></i> Predict Next Day Price
+                    </button>
+                    
+                    <div id="prediction-result">
+                        </div>
+                </div>
+            </div>
+            
+            <div class="right-column">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Historical Data</h2>
+                        <div class="card-actions">
+                            <select id="period-select">
+                                <option value="1mo">1 Month</option>
+                                <option value="3mo">3 Months</option>
+                                <option value="6mo">6 Months</option>
+                                <option value="1y" selected>1 Year</option>
+                                <option value="2y">2 Years</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="history-chart"></canvas>
+                    </div>
+                    <div id="history-error" class="error-message" style="display: none;">
+                        Error loading historical data. Using demo data instead.
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Real-Time Price Chart</h2>
+                        <div class="card-actions">
+                            <select id="rt-symbol-select">
+                                <option value="AAPL">AAPL</option>
+                                <option value="GOOGL">GOOGL</option>
+                                <option value="MSFT">MSFT</option>
+                                <option value="TSLA">TSLA</option>
+                                <option value="NVDA">NVDA</option>
+                                <option value="AMZN">AMZN</option>
+                                <option value="META">META</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="realtime-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Stock Prediction Dashboard &copy; 2026 | Connected to Flask Backend</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <div class="notification-content"></div>
+    </div>
+
+    <script>
+        // API configuration
+        const API_BASE_URL = 'http://localhost:5000';
+        
+        // DOM elements
+        const statusText = document.getElementById('status-text');
+        const pricesContainer = document.getElementById('prices-container');
+        const refreshPricesBtn = document.getElementById('refresh-prices');
+        const symbolInput = document.getElementById('symbol-input');
+        const predictBtn = document.getElementById('predict-btn');
+        const predictionResult = document.getElementById('prediction-result');
+        const periodSelect = document.getElementById('period-select');
+        const rtSymbolSelect = document.getElementById('rt-symbol-select');
+        const notification = document.getElementById('notification');
+        const historyError = document.getElementById('history-error');
+        
+        // Chart instances
+        let historyChart = null;
+        let realtimeChart = null;
+        let realtimeData = [];
+        
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBackendStatus();
+            loadRealTimePrices();
+            setupHistoricalChart();
+            setupRealtimeChart();
+            setupEventListeners();
+            
+            // Set up periodic updates
+            setInterval(loadRealTimePrices, 10000); // Update prices every 10 seconds
+            setInterval(updateRealtimeChart, 2000); // Update realtime chart every 2 seconds
+        });
+        
+        // Check if backend is connected
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/system/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusText.textContent = `Connected (Model: ${data.model_loaded ? 'Loaded' : 'Demo'})`;
+                    showNotification('Connected to backend successfully', 'success');
+                } else {
+                    statusText.textContent = 'Connection Error';
+                    showNotification('Backend responded with error', 'error');
+                }
+            } catch (error) {
+                statusText.textContent = 'Connection Failed';
+                showNotification('Cannot connect to backend. Make sure Flask is running on port 5000', 'error');
+                console.error('Connection error:', error);
+            }
+        }
+        
+        // Load real-time prices
+        async function loadRealTimePrices() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/live/prices`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderStockPrices(data.data);
+                } else {
+                    showNotification('Failed to load prices', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading prices:', error);
+            }
+        }
+        
+        // Render stock prices in the grid
+        function renderStockPrices(prices) {
+            pricesContainer.innerHTML = '';
+            
+            prices.forEach(stock => {
+                const changeClass = stock.change_percent >= 0 ? 'positive' : 'negative';
+                const changeIcon = stock.change_percent >= 0 ? 'fa-caret-up' : 'fa-caret-down';
+                
+                const stockCard = document.createElement('div');
+                stockCard.className = 'stock-card';
+                stockCard.innerHTML = `
+                    <div class="stock-symbol">${stock.symbol}</div>
+                    <div class="stock-price">$${stock.price.toFixed(2)}</div>
+                    <div class="stock-change ${changeClass}">
+                        <i class="fas ${changeIcon}"></i> ${Math.abs(stock.change_percent).toFixed(2)}%
+                    </div>
+                `;
+                
+                pricesContainer.appendChild(stockCard);
+            });
+        }
+        
+        // Set up historical price chart
+        function setupHistoricalChart() {
+            const ctx = document.getElementById('history-chart').getContext('2d');
+            
+            historyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Stock Price',
+                        data: [],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Load initial historical data
+            loadHistoricalData();
+        }
+        
+        // Load historical data for the chart
+        async function loadHistoricalData() {
+            try {
+                const symbol = 'AAPL';
+                const period = periodSelect.value;
+                
+                const response = await fetch(`${API_BASE_URL}/api/historical-data?symbol=${symbol}&period=${period}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    historyError.style.display = 'none';
+                    updateHistoricalChart(data.data);
+                } else {
+                    throw new Error(data.error || 'Failed to load historical data');
+                }
+            } catch (error) {
+                console.error('Error loading historical data:', error);
+                historyError.style.display = 'block';
+                
+                // Use demo data as fallback
+                useDemoHistoricalData();
+            }
+        }
+        
+        // Use demo data when historical data fails
+        function useDemoHistoricalData() {
+            const demoData = [];
+            const now = new Date();
+            let price = 150;
+            
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - (30 - i));
+                
+                price += (Math.random() * 10 - 5);
+                if (price < 50) price = 50;
+                
+                demoData.push({
+                    date: date.toISOString().split('T')[0],
+                    open: price - (Math.random() * 2),
+                    high: price + (Math.random() * 3),
+                    low: price - (Math.random() * 3),
+                    close: price,
+                    volume: Math.floor(Math.random() * 10000000) + 5000000
+                });
+            }
+            
+            updateHistoricalChart(demoData);
+        }
+        
+        // Update historical chart with new data
+        function updateHistoricalChart(data) {
+            const labels = data.map(item => item.date);
+            const prices = data.map(item => item.close);
+            
+            historyChart.data.labels = labels;
+            historyChart.data.datasets[0].data = prices;
+            historyChart.update();
+        }
+        
+        // Set up real-time chart
+        function setupRealtimeChart() {
+            const ctx = document.getElementById('realtime-chart').getContext('2d');
+            
+            realtimeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Real-Time Price',
+                        data: [],
+                        borderColor: '#7e22ce',
+                        backgroundColor: 'rgba(126, 34, 206, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            for (let i = 0; i < 20; i++) {
+                realtimeData.push({
+                    time: i,
+                    price: 150 + (Math.random() * 10 - 5)
+                });
+            }
+            
+            updateRealtimeChart();
+        }
+        
+        // Update real-time chart with new data
+        function updateRealtimeChart() {
+            const lastPrice = realtimeData.length > 0 ? realtimeData[realtimeData.length - 1].price : 150;
+            const newPrice = lastPrice + (Math.random() * 2 - 1);
+            
+            realtimeData.push({
+                time: realtimeData.length,
+                price: newPrice
+            });
+            
+            if (realtimeData.length > 20) {
+                realtimeData.shift();
+            }
+            
+            realtimeChart.data.labels = realtimeData.map(item => item.time);
+            realtimeChart.data.datasets[0].data = realtimeData.map(item => item.price);
+            realtimeChart.update();
+        }
+        
+        // Make a prediction
+        async function makePrediction() {
+            const symbol = symbolInput.value.trim().toUpperCase();
+            
+            if (!symbol) {
+                showNotification('Please enter a stock symbol', 'error');
+                return;
+            }
+            
+            predictionResult.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Making prediction for ${symbol}...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/predict/${symbol}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderPredictionResult(data);
+                } else {
+                    showNotification(data.error || 'Prediction failed', 'error');
+                    predictionResult.innerHTML = '<div class="demo-notice">Prediction failed. Running in demo mode.</div>';
+                    renderFallbackPrediction(symbol);
+                }
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showNotification('Error making prediction. Check backend connection.', 'error');
+                predictionResult.innerHTML = '<div class="demo-notice">Connection error. Running in demo mode.</div>';
+                renderFallbackPrediction(symbol);
+            }
+        }
+        
+        // Render prediction result
+        function renderPredictionResult(data) {
+            const signalClass = `signal signal-${data.signal.toLowerCase()}`;
+            
+            predictionResult.innerHTML = `
+                <div class="prediction-result">
+                    <h3>Prediction for ${data.symbol}</h3>
+                    <div class="prediction-price">$${data.predicted_price.toFixed(2)}</div>
+                    <div class="${signalClass}">${data.signal}</div>
+                    <p>Current: $${data.current_price.toFixed(2)} (${data.change_percent > 0 ? '+' : ''}${data.change_percent.toFixed(2)}%)</p>
+                    <p>Confidence: ${data.confidence}</p>
+                    ${data.demo_mode ? '<div class="demo-notice">Using enhanced demo mode (no trained model available)</div>' : ''}
+                </div>
+            `;
+        }
+        
+        // Render fallback prediction when the model fails
+        function renderFallbackPrediction(symbol) {
+            const currentPrice = 150 + (Math.random() * 50);
+            const changePercent = (Math.random() * 6) - 3;
+            const predictedPrice = currentPrice * (1 + changePercent / 100);
+            
+            let signal = "HOLD";
+            if (changePercent > 1.5) signal = "BUY";
+            if (changePercent < -1.5) signal = "SELL";
+            
+            const signalClass = `signal signal-${signal.toLowerCase()}`;
+            
+            predictionResult.innerHTML += `
+                <div class="prediction-result">
+                    <h3>Demo Prediction for ${symbol}</h3>
+                    <div class="prediction-price">$${predictedPrice.toFixed(2)}</div>
+                    <div class="${signalClass}">${signal}</div>
+                    <p>Simulated current: $${currentPrice.toFixed(2)} (${changePercent > 0 ? '+' : ''}${changePercent.toFixed(2)}%)</p>
+                    <p>Confidence: low (using demo data)</p>
+                    <div class="demo-notice">Using fallback demo prediction due to backend error</div>
+                </div>
+            `;
+        }
+        
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const content = notification.querySelector('.notification-content');
+            
+            content.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            const icon = notification.querySelector('i');
+            icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            refreshPricesBtn.addEventListener('click', loadRealTimePrices);
+            predictBtn.addEventListener('click', makePrediction);
+            periodSelect.addEventListener('change', loadHistoricalData);
+            rtSymbolSelect.addEventListener('change', () => {
+                realtimeData = [];
+                updateRealtimeChart();
+            });
+        }
+    </script>
+</body>
+</html>
